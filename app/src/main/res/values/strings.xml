@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">eFarm</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="berhasil_login">Berhasil login</string>
+    <string name="email_atau_password_mungkin_salah">Email atau password mungkin salah</string>
+</resources>
