@@ -4,4 +4,21 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="berhasil_login">Berhasil login</string>
     <string name="email_atau_password_mungkin_salah">Email atau password mungkin salah</string>
+    <string name="icon_like">icon like</string>
+    <string name="icon_comment">icon comment</string>
+    <string name="unknown_name">Unknown name</string>
+    <string name="image_header">image header</string>
+    <string name="topik">Topik</string>
+    <string name="forum">Forum</string>
+    <string name="semua">Semua</string>
+    <string name="komentar">%1$d Komentar</string>
+    <string name="posted_days_ago">%1$s hari lalu pukul %2$s </string>
+    <string name="posted">%1$s pukul %2$s</string>
+    <string name="date_format">%1$s/%2$s/%3$s</string>
+    <string name="today">Hari ini</string>
+    <string name="yesterday">Kemarin</string>
+    <string name="pilih_topik">Pilih Topik</string>
+    <string name="topik_umum">Topik Umum</string>
+    <string name="topik_komoditas">Topik Komoditas</string>
+    <string name="label_komentar">Komentar</string>
 </resources>

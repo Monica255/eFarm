@@ -1,8 +1,11 @@
 package com.example.efarm
 
 import com.example.efarm.core.data.source.repository.AuthRepository
+import com.example.efarm.core.data.source.repository.ForumRepository
 import com.example.efarm.core.domain.usecase.AuthInteractor
 import com.example.efarm.core.domain.usecase.AuthUseCase
+import com.example.efarm.core.domain.usecase.ForumInteractor
+import com.example.efarm.core.domain.usecase.ForumUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,5 +19,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAuthUseCase(authRepository: AuthRepository): AuthUseCase=AuthInteractor(authRepository)
+    @Provides
+    @Singleton
+    fun provideForumUseCase(forumRepository: ForumRepository): ForumUseCase = ForumInteractor(forumRepository)
 
 }
