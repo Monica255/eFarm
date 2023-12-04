@@ -52,7 +52,7 @@ class PagingForumAdapter(
             }
 
 
-            binding.iconVerified.visibility= if (post.verified) View.VISIBLE else View.GONE
+            binding.iconVerified.visibility= if (post.verified!=null) View.VISIBLE else View.GONE
 
 
             val isLiked=post.likes?.let { it.contains(uid) }?:false
@@ -82,18 +82,22 @@ class PagingForumAdapter(
                 }
             }
 
-            var doubleClick = false
+            var doubleClick = 0
             binding.root.setOnClickListener {
-                if (doubleClick) {
-                    if (!isLiked) doLike(Unit)
-                    //return@setOnClickListener
-                }else {
-                    //onClick.invoke(post)
-                }
-
-
-                doubleClick = true
-                Handler(Looper.getMainLooper()).postDelayed({ doubleClick = false }, 1000)
+                doubleClick +=1
+                Handler(Looper.getMainLooper()).postDelayed(
+                    {
+                        Log.d("TAG",doubleClick.toString())
+                        if(doubleClick==2){
+                            if (!isLiked) doLike(Unit)
+                            doubleClick =0
+                            return@postDelayed
+                        }else if(doubleClick==1){
+                            onClick.invoke(post)
+                            doubleClick =0
+                            return@postDelayed
+                        }
+                    }, 200)
             }
 
             if (post.img_header != null) {

@@ -21,4 +21,6 @@
     <string name="topik_umum">Topik Umum</string>
     <string name="topik_komoditas">Topik Komoditas</string>
     <string name="label_komentar">Komentar</string>
+    <string name="gagal_mendapatkan_data">Gagal mendapatkan data</string>
+    <string name="best_answer">Best answer</string>
 </resources>

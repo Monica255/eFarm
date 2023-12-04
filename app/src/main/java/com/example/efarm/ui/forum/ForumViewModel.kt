@@ -7,6 +7,7 @@ import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
 import com.example.efarm.core.data.Resource
+import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.domain.usecase.AuthUseCase
@@ -14,6 +15,7 @@ import com.example.efarm.core.domain.usecase.ForumUseCase
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.ViewEventsForumPost
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -60,6 +62,12 @@ class ForumViewModel @Inject constructor(
         modificationEventsForumPost.value += sampleViewEvents
     }
 
+    suspend fun getTopics(topics: List<String>) = forumUseCase.getTopics(topics).asLiveData()
+    fun getDetailForum(idForum:String)=forumUseCase.getDetailForum(idForum).asLiveData()
+
+    fun getComments(comments:List<String>,idBestComment:CommentForumPost?)=forumUseCase.getComments(comments,idBestComment).asLiveData()
+
+    suspend fun getBestComment(idComment:String)=forumUseCase.getBestComment(idComment).asLiveData()
     private fun applyEventsForumPost(
         paging: PagingData<ForumPost>,
         ViewEvents: ViewEventsForumPost

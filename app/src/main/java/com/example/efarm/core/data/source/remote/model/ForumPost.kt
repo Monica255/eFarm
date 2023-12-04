@@ -12,14 +12,14 @@ data class ForumPost(
     var likes:MutableList<String>?= null,
     var comments:MutableList<String>?=null,
     var topics:List<String>?=null,
-    var verified:Boolean=false
+    var verified:String?=null
 )
 
 data class CommentForumPost(
-    var id_comment_forum_post:String,
-    var id_forum_post: String,
-    var content:String,
-    var user_id:String,
+    var id_comment:String="",
+    var id_forum_post: String="",
+    var content:String="",
+    var user_id:String="",
     var timestamp: Long=0,
 )
 

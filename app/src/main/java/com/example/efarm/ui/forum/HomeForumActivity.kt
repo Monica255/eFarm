@@ -1,5 +1,6 @@
 package com.example.efarm.ui.forum
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import com.example.eFarm.databinding.ActivityHomeForumBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
+import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.ViewEventsForumPost
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,9 +33,9 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
     private var tempPost:ForumPost?=null
 
     private val onCLick: ((ForumPost) -> Unit) = { post ->
-//        val intent = Intent(this, DetailForumPostActivity::class.java)
-//        intent.putExtra(FORUM_POST_ID, post.id_forum_post)
-//        startActivity(intent)
+        val intent = Intent(this, DetailForumPostActivity::class.java)
+        intent.putExtra(FORUM_POST_ID, post.id_forum_post)
+        startActivity(intent)
 
     }
 
@@ -72,39 +74,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
         adapterForum = PagingForumAdapter(onCLick,onCheckChanged,viewModel,this)
 
-
         binding.rvForumPost.adapter = adapterForum
-
-//        binding.rgKategori.check(
-//            when (viewModel.mKategoriForum) {
-//                KategoriForum.SEMUA -> R.id.rb_semua
-//                KategoriForum.INFORMASI -> R.id.rb_informasi
-//                KategoriForum.PERTANYAAN -> R.id.rb_pertanyaan
-//                else -> R.id.rb_lainnya
-//            }
-//        )
-
-//        binding.rgKategori.setOnCheckedChangeListener { _, i ->
-//            when(i){
-//                R.id.rb_semua->{
-//                    if(viewModel.mKategoriForum!= KategoriForum.SEMUA)viewModel.getData(
-//                        KategoriForum.SEMUA)
-//                }
-//                R.id.rb_informasi->{
-//                    if(viewModel.mKategoriForum!= KategoriForum.INFORMASI)viewModel.getData(
-//                        KategoriForum.INFORMASI)
-//                }
-//                R.id.rb_pertanyaan->{
-//                    if(viewModel.mKategoriForum!= KategoriForum.PERTANYAAN)viewModel.getData(
-//                        KategoriForum.PERTANYAAN)
-//                }
-//                R.id.rb_lainnya->{
-//                    if(viewModel.mKategoriForum!= KategoriForum.LAINNYA)viewModel.getData(
-//                        KategoriForum.LAINNYA)
-//                }
-//            }
-//
-//        }
 
         binding.btnTopikPostForum.setOnClickListener {
             val topicFragment= ForumTopicFragment()
@@ -137,14 +107,11 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     is Resource.Success -> {
                         if(it.data==null||it.data.isEmpty()){
                             Log.d("TAG","common null")
-
-//                            binding.tvLabelCommonTopic.visibility=View.GONE
                         }
 
                         it.data?.toMutableList()?.let { it1 ->
                             viewModel.topicsCommon.value=it1
-//                            adapterCommonTopic.submitList(it1)
-                            Log.d("TAG",it1.toString()) }
+                        }
                     }
                     is Resource.Error -> {
                         Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
@@ -165,8 +132,7 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         }
                         it.data?.toMutableList()?.let { it1 ->
                             viewModel.topicsCommodity.value=it1
-//                            adapterCommodityTopic.submitList(it1)
-                            Log.d("TAG",it1.toString()) }
+                        }
                     }
                     is Resource.Error -> {
                         Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()

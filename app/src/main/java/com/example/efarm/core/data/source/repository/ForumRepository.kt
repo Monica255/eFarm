@@ -3,6 +3,7 @@ package com.example.efarm.core.data.source.repository
 import androidx.paging.PagingData
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.firebase.FirebaseDataSource
+import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.domain.repository.IForumRepository
@@ -18,4 +19,8 @@ class ForumRepository @Inject constructor(
     override fun getPagingForum(topic: Topic?): Flow<PagingData<ForumPost>> =firebaseDataSource.getPagingForum(topic)
     override suspend fun getListTopikForum(kategoriTopik: KategoriTopik): Flow<Resource<List<Topic>>> =firebaseDataSource.getListTopikForum(kategoriTopik)
     override fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> =firebaseDataSource.likeForumPost(forumPost)
+    override fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> = firebaseDataSource.getDetailForum(idForum)
+    override suspend fun getTopics(topics: List<String>): Flow<Resource<List<Topic>>> = firebaseDataSource.getTopics(topics)
+    override fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = firebaseDataSource.getComments(comments,idBestComment)
+    override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = firebaseDataSource.getBestComment(idComment)
 }

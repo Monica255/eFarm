@@ -8,6 +8,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.eFarm.R
 import com.example.efarm.core.data.Resource
+import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.data.source.remote.model.UserData
@@ -45,6 +46,8 @@ class FirebaseDataSource @Inject constructor(
             return firebaseAuth.currentUser
         }
     private val userDataRef = firebaseDatabase.reference.child("user_data/")
+    private val commentRef = firebaseFirestore.collection("forum_comments")
+
     suspend fun registerAccount(
         email: String,
         pass: String,
@@ -186,6 +189,32 @@ class FirebaseDataSource @Inject constructor(
         return pager.flow
     }
 
+    fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
+        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",comments).limit(3)
+        val pager = Pager(
+            config = PagingConfig(
+                pageSize = 3
+            ),
+            pagingSourceFactory = {
+                CommentForumPagingStore(query,idBestComment)
+            }
+        )
+        return pager.flow
+    }
+
+//    fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
+//        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",idForum).limit(3)
+//        val pager = Pager(
+//            config = PagingConfig(
+//                pageSize = 3
+//            ),
+//            pagingSourceFactory = {
+//                CommentForumPagingStore(query,idBestComment)
+//            }
+//        )
+//        return pager.flow
+//    }
+
     private val topicRef = firebaseFirestore.collection("topics")
     private fun getQueryTopicByCategory(kategori: KategoriTopik): Query {
         return if (kategori != KategoriTopik.SEMUA) {
@@ -219,6 +248,31 @@ class FirebaseDataSource @Inject constructor(
                 }
             }.await()
 
+            if (msg != null) {
+                emit(Resource.Error(msg!!))
+            } else {
+                emit(Resource.Success(list))
+            }
+        }
+    }
+
+    suspend fun getTopics(topics:List<String>): Flow<Resource<List<Topic>>>{
+        var list= mutableListOf<Topic>()
+        var msg:String?=context.getString(R.string.gagal_mendapatkan_data)
+        return flow{
+            topicRef.whereIn("topic_id",topics).get().addOnCompleteListener {
+                if(it.isSuccessful){
+                    msg=null
+                    try{
+                        for(i in it.result){
+                            val x=i.toObject<Topic>()
+                            list.add(x)
+                        }
+                    }catch (e:Exception){
+                        Log.d("TAG","unsuccessful")
+                    }
+                }
+            }.await()
             if (msg != null) {
                 emit(Resource.Error(msg!!))
             } else {
@@ -261,6 +315,53 @@ class FirebaseDataSource @Inject constructor(
             if (successMsg != null) {
                 emit(Resource.Success(successMsg!!))
             } else emit(Resource.Error(errorMsg))
+        }
+    }
+
+    fun getDetailForum(idForum:String): Flow<Resource<ForumPost>> {
+        var x:ForumPost?=null
+        var msg = context.getString(R.string.gagal_mendapatkan_data)
+        return  flow{
+            emit(Resource.Loading())
+            forumRef.document(idForum).get().addOnCompleteListener {
+                if(it.isSuccessful){
+                    try {
+                        x = it.result.toObject<ForumPost>()
+                    } catch (e: Exception) {
+                        msg = e.message.toString()                   }
+                }else{
+                    Log.d("TAG","unsuccessful")
+                }
+            }.await()
+            if (x != null) {
+                emit(Resource.Success(x!!))
+            } else {
+                emit(Resource.Error(msg))
+            }
+        }
+    }
+
+    suspend fun getBestComment(idComment:String):Flow<Resource<CommentForumPost>>{
+        var x:CommentForumPost?=null
+        var msg = context.getString(R.string.gagal_mendapatkan_data)
+        return  flow{
+            emit(Resource.Loading())
+            commentRef.document(idComment).get().addOnCompleteListener {
+                if(it.isSuccessful){
+                    try {
+                        x = it.result.toObject<CommentForumPost>()
+                    } catch (e: Exception) {
+                        msg = e.message.toString()                   }
+                }else{
+                    msg="Unsuccesful"
+                    Log.d("TAG","unsuccessful")
+                }
+            }.await()
+            if (x != null) {
+                emit(Resource.Success(x!!))
+            } else {
+                emit(Resource.Error(msg))
+            }
         }
     }
 }
