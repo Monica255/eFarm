@@ -22,8 +22,9 @@ class ForumInteractor @Inject constructor(
 
     override fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> =repo.likeForumPost(forumPost)
     override fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> = repo.getDetailForum(idForum)
-    override suspend fun getTopics(topics: List<String>): Flow<Resource<List<Topic>>> = repo.getTopics(topics)
-    override fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = repo.getComments(comments,idBestComment)
+    override suspend fun getTopics(topics: List<String>) = repo.getTopics(topics)
+    override fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = repo.getComments(idForum,idBestComment)
     override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = repo.getBestComment(idComment)
+    override suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> = repo.sendComment(comment)
 
 }

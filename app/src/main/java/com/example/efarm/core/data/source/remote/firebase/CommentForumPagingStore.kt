@@ -53,7 +53,7 @@ class CommentForumPagingStore (
             //list= mutableListOf()
 
 
-//            Log.d("TAG","list c "+list)
+            Log.d("CMT","list c "+list)
 //            list=currentPage.toObjects(CommentForumPost::class.java)
             LoadResult.Page(
                 data = list,

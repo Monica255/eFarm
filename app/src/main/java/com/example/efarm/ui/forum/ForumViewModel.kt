@@ -65,9 +65,11 @@ class ForumViewModel @Inject constructor(
     suspend fun getTopics(topics: List<String>) = forumUseCase.getTopics(topics).asLiveData()
     fun getDetailForum(idForum:String)=forumUseCase.getDetailForum(idForum).asLiveData()
 
-    fun getComments(comments:List<String>,idBestComment:CommentForumPost?)=forumUseCase.getComments(comments,idBestComment).asLiveData()
+    fun getComments(idForum:String,idBestComment:CommentForumPost?)=forumUseCase.getComments(idForum,idBestComment).asLiveData()
 
     suspend fun getBestComment(idComment:String)=forumUseCase.getBestComment(idComment).asLiveData()
+
+    suspend fun sendComment(comment:CommentForumPost)=forumUseCase.sendComment(comment).asLiveData()
     private fun applyEventsForumPost(
         paging: PagingData<ForumPost>,
         ViewEvents: ViewEventsForumPost

@@ -1,10 +1,13 @@
 package com.example.efarm.ui.forum
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
@@ -16,10 +19,13 @@ import com.example.eFarm.databinding.ActivityDetailForumPostBinding
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.data.source.remote.model.ForumPost
+import com.example.efarm.core.util.DateConverter
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.TextFormater
+import com.example.efarm.core.util.ViewEventsForumPost
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -30,7 +36,8 @@ class DetailForumPostActivity : AppCompatActivity() {
     private lateinit var adapterTopic: FilterTopicAdapter
     private lateinit var adapterComment: PagingCommentAdapter
     private val viewModel: ForumViewModel by viewModels()
-
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+    var bestComment:CommentForumPost?=null
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,14 +52,11 @@ class DetailForumPostActivity : AppCompatActivity() {
         binding.rvTopic.adapter = adapterTopic
 
         val layoutManager = LinearLayoutManager(this)
-        binding.rvKomentar.layoutManager=layoutManager
-
+        binding.rvKomentar.layoutManager = layoutManager
 
         binding.btnClose.setOnClickListener {
             finish()
         }
-
-
 
         val id = intent.getStringExtra(FORUM_POST_ID)
         id?.let {
@@ -84,6 +88,18 @@ class DetailForumPostActivity : AppCompatActivity() {
         binding.tvPostTitle.text = data.title
         binding.tvContentPost.text = data.content
         binding.iconVerified.visibility = if (data.verified != null) View.VISIBLE else View.GONE
+
+
+        val isLiked = data.likes?.let { it.contains(uid) } ?: false
+        if (data.likes != null && uid != null) {
+            binding.cbLike.isChecked = isLiked
+        } else {
+            binding.cbLike.isChecked = false
+        }
+
+        binding.tvLikeCount.text = TextFormater.formatLikeCounts(data.like_count)
+
+
         Glide.with(this)
             .load(data.img_header)
             .placeholder(R.drawable.placeholder)
@@ -92,7 +108,7 @@ class DetailForumPostActivity : AppCompatActivity() {
         binding.tvTimastamp.text = TextFormater.toPostTime(data.timestamp, this)
 
 
-        adapterComment = PagingCommentAdapter(data.verified,viewModel,this)
+        adapterComment = PagingCommentAdapter(data.verified, viewModel, this)
         binding.rvKomentar.adapter = adapterComment
 
         lifecycleScope.launch {
@@ -111,33 +127,64 @@ class DetailForumPostActivity : AppCompatActivity() {
                                 binding.tvLabelTopic.visibility = View.GONE
                             }
                         }
+
                         is Resource.Success -> {
                             binding.tvLabelTopic.visibility = View.VISIBLE
                             it.data?.let {
                                 adapterTopic.submitList(it.toMutableList())
                             }
+                            getComments(data)
                         }
                     }
+
+                }
+            }
+
+        }
+
+        binding.btnSend.setOnClickListener {
+            uid?.let { uid ->
+                val content = binding.etKomentar.text.toString().trim()
+                val comment = CommentForumPost(
+                    "",
+                    data.id_forum_post,
+                    content,
+                    uid,
+                    DateConverter.getCurrentTimestamp()
+                )
+                if (content != "") {
                     lifecycleScope.launch {
-                        data.comments?.let {list->
-                            if(!list.isEmpty()){
-                                data.verified?.let { it1 ->
-                                    viewModel.getBestComment(it1).observe(this@DetailForumPostActivity){
-                                        when(it){
-                                            is Resource.Loading->{showLoading(true)}
-                                            is Resource.Error->{
-                                                showLoading(false)
-                                                it.message?.let {
-                                                    Log.d("TAG","error bc "+it)
-                                                }
-                                            }
-                                            is Resource.Success->{
-                                                showLoading(false)
-                                                getComments(list,it.data)
-                                                Log.d("TAG","best "+it.data.toString())
-                                            }
-                                        }
-                                    }}
+                        viewModel.sendComment(comment).observe(this@DetailForumPostActivity) {
+                            when (it) {
+                                is Resource.Loading -> showLoading(true)
+                                is Resource.Error -> {
+                                    it.message?.let {
+                                        Toast.makeText(
+                                            this@DetailForumPostActivity,
+                                            it,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                    }
+                                }
+
+                                is Resource.Success -> {
+                                    showLoading(false)
+                                    it.data?.let {
+                                        Toast.makeText(
+                                            this@DetailForumPostActivity,
+                                            it,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        binding.etKomentar.setText("")
+//                                        data.id_forum_post?.let {
+//                                            Log.d("CMT","it")
+//                                            getComments(it, bestComment)
+//                                        }
+                                        getComments(data)
+                                        //get new data from database to show the newly added comments
+                                    }
+                                }
                             }
                         }
                     }
@@ -145,17 +192,47 @@ class DetailForumPostActivity : AppCompatActivity() {
             }
 
         }
+    }
 
-//        val test=CommentForumPost("ULabDPh14FIWwR4XA2yr","6oRRHA189WfEU3n7q1wQ","Caranya adalah sebagai berikut....","WAJzkhfQHUf6iu6KKETG9t6c4Gs1",1665589699000)
+    private fun getComments(data: ForumPost) {
+        lifecycleScope.launch {
+            data.comments?.let { list ->
+                if (!list.isEmpty()) {
+                    data.verified?.let { it1 ->
+                        viewModel.getBestComment(it1).observe(this@DetailForumPostActivity) {
+                            when (it) {
+                                is Resource.Loading -> {
+                                    showLoading(true)
+                                }
+
+                                is Resource.Error -> {
+                                    showLoading(false)
+                                    it.message?.let {
+                                        Log.d("TAG", "error bc " + it)
+                                    }
+                                }
+
+                                is Resource.Success -> {
+                                    bestComment=it.data
+                                    showLoading(false)
+                                    getComments(data.id_forum_post, bestComment)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
     }
 
-    private fun getComments(comments:List<String>,bestCommnet:CommentForumPost?){
-        viewModel.getComments(comments,bestCommnet).observe(this) {
-            adapterComment.submitData(lifecycle,it)
-
+    private fun getComments(idForum:String, bestCommnet: CommentForumPost?) {
+        viewModel.getComments(idForum, bestCommnet).observe(this) {
+            Log.d("CMT",bestCommnet.toString())
+            adapterComment.submitData(lifecycle, it)
         }
     }
+
     private fun showLoading(isShowLoading: Boolean) {
         binding.pbLoading.visibility = if (isShowLoading) View.VISIBLE else View.GONE
     }

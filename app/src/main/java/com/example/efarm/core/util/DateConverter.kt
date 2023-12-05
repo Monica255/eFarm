@@ -47,4 +47,6 @@ object DateConverter {
         return output.toString()
     }
 
+    fun getCurrentTimestamp():Long=System.currentTimeMillis()
+
 }

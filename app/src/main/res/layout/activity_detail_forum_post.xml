@@ -70,8 +70,9 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.core.widget.NestedScrollView
+            android:layout_weight="1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp">
             <LinearLayout
                 android:background="@color/light_grey"
                 android:orientation="vertical"
@@ -182,6 +183,64 @@
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:padding="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:visibility="gone"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:layout_marginRight="6dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <CheckBox
+                    android:gravity="center_horizontal"
+                    android:id="@+id/cb_like"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@drawable/selector_like"
+                    android:button="@android:color/transparent"
+                    android:checked="true" />
+                <TextView
+                    android:id="@+id/tv_like_count"
+                    style="@style/SubTitleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:textColor="@color/green"
+                    android:maxLines="1"
+                    android:text="2000" />
+            </LinearLayout>
+
+            <EditText
+                android:maxLines="5"
+                android:textAlignment="textStart"
+                style="@style/TextStyle"
+                android:id="@+id/et_komentar"
+                android:padding="15dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="Komentar"
+                android:background="@drawable/bg_edit_text_outlined"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_marginStart="4dp"
+                android:layout_gravity="center_vertical"
+                android:button="@android:color/transparent"
+                android:id="@+id/btn_send"
+                android:background="@drawable/selector_btn_send"
+                android:layout_width="25dp"
+                android:layout_height="25dp"/>
+
+
+        </LinearLayout>
+
     </LinearLayout>
     <ProgressBar
         android:id="@+id/pb_loading"

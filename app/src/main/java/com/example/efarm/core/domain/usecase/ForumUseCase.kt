@@ -23,7 +23,9 @@ interface ForumUseCase {
 
     suspend fun getTopics(topics:List<String>): Flow<Resource<List<Topic>>>
 
-    fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>>
+    fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>>
 
     suspend fun getBestComment(idComment:String):Flow<Resource<CommentForumPost>>
+
+    suspend fun sendComment(comment:CommentForumPost):Flow<Resource<String>>
 }

@@ -189,8 +189,8 @@ class FirebaseDataSource @Inject constructor(
         return pager.flow
     }
 
-    fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
-        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",comments).limit(3)
+    fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
+        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereEqualTo("id_forum_post",idForum).limit(3)
         val pager = Pager(
             config = PagingConfig(
                 pageSize = 3
@@ -202,8 +202,8 @@ class FirebaseDataSource @Inject constructor(
         return pager.flow
     }
 
-//    fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
-//        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",idForum).limit(3)
+//    fun getComments(comments:List<String>,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
+//        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereIn("id_comment",comments).limit(3)
 //        val pager = Pager(
 //            config = PagingConfig(
 //                pageSize = 3
@@ -342,6 +342,7 @@ class FirebaseDataSource @Inject constructor(
     }
 
     suspend fun getBestComment(idComment:String):Flow<Resource<CommentForumPost>>{
+
         var x:CommentForumPost?=null
         var msg = context.getString(R.string.gagal_mendapatkan_data)
         return  flow{
@@ -361,6 +362,39 @@ class FirebaseDataSource @Inject constructor(
                 emit(Resource.Success(x!!))
             } else {
                 emit(Resource.Error(msg))
+            }
+        }
+    }
+
+    suspend fun sendComment(comment:CommentForumPost):Flow<Resource<String>>{
+        val key=commentRef.document().id
+        var msg :String?= null
+        comment.id_comment=key
+        return flow{
+            emit(Resource.Loading())
+            val x=FieldValue.arrayUnion(key)
+            Log.d("TAG",x.toString())
+            forumRef.document(comment.id_forum_post).update("comments",FieldValue.arrayUnion(key)).addOnCompleteListener {
+                if(it.isSuccessful){
+                    commentRef.document(key).set(comment).addOnCompleteListener {
+                        try {
+                            if (!it.isSuccessful) {
+                                val exception = it.exception
+                                msg=exception.toString()
+                            }
+                        }catch (e:Exception){
+                            msg=e.message
+                        }
+                    }
+                }else{
+                    msg="Error adding new comment"
+                }
+            }.await()
+
+            if(msg!=null){
+                emit(Resource.Error(msg!!))
+            }else{
+                emit(Resource.Success("Comment added successfully"))
             }
         }
     }
