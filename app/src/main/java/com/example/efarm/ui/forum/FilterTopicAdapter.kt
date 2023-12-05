@@ -8,7 +8,9 @@ import com.example.efarm.core.data.source.remote.model.Topic
 import com.google.firebase.auth.FirebaseAuth
 
 class FilterTopicAdapter(
-    private val onClick: ((Topic) -> Unit),
+    private val isClickable:Boolean,
+    private val onClick: ((Topic) -> Unit)
+
 ) :
     RecyclerView.Adapter<FilterTopicAdapter.FillterTopicVH>() {
 
@@ -43,6 +45,7 @@ class FilterTopicAdapter(
             binding.root.setOnClickListener {
                 onClick(topic)
             }
+            binding.root.isClickable=isClickable
             binding.root.text=topic.topic_name
         }
     }

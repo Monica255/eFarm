@@ -68,12 +68,12 @@ class ForumTopicFragment : DialogFragment() {
             dismiss()
         }
 
-        adapterCommonTopic = FilterTopicAdapter { topic ->
+        adapterCommonTopic = FilterTopicAdapter(true) { topic ->
             onGetDataTopic.handleDataTopic(topic)
             dismiss()
         }
 
-        adapterCommodityTopic = FilterTopicAdapter { topic ->
+        adapterCommodityTopic = FilterTopicAdapter(true) { topic ->
             onGetDataTopic.handleDataTopic(topic)
             dismiss()
         }

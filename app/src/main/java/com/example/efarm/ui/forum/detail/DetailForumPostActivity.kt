@@ -1,7 +1,5 @@
-package com.example.efarm.ui.forum
+package com.example.efarm.ui.forum.detail
 
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -22,7 +20,8 @@ import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.util.DateConverter
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.TextFormater
-import com.example.efarm.core.util.ViewEventsForumPost
+import com.example.efarm.ui.forum.FilterTopicAdapter
+import com.example.efarm.ui.forum.ForumViewModel
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -44,7 +43,7 @@ class DetailForumPostActivity : AppCompatActivity() {
         binding = ActivityDetailForumPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapterTopic = FilterTopicAdapter { }
+        adapterTopic = FilterTopicAdapter (false){ }
 
         val layoutManagerCommonTopic = FlexboxLayoutManager(this)
         layoutManagerCommonTopic.flexDirection = FlexDirection.ROW
@@ -177,12 +176,7 @@ class DetailForumPostActivity : AppCompatActivity() {
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         binding.etKomentar.setText("")
-//                                        data.id_forum_post?.let {
-//                                            Log.d("CMT","it")
-//                                            getComments(it, bestComment)
-//                                        }
                                         getComments(data)
-                                        //get new data from database to show the newly added comments
                                     }
                                 }
                             }

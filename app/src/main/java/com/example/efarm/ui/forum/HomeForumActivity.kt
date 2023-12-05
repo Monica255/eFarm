@@ -18,6 +18,8 @@ import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.ViewEventsForumPost
+import com.example.efarm.ui.forum.detail.DetailForumPostActivity
+import com.example.efarm.ui.forum.upload.MakePostActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -94,7 +96,11 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     adapterForum.submitData(lifecycle, it)
                 }
             }
+        }
 
+        binding.fabAdd.setOnClickListener{
+            val intent = Intent(this, MakePostActivity::class.java)
+            startActivity(intent)
         }
 
         lifecycleScope.launch {

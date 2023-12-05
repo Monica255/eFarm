@@ -13,6 +13,7 @@
     <color name="not_so_black">#343333</color>
     <color name="red">#C35252</color>
     <color name="brown">#785716</color>
+    <color name="light_brown">#805C15</color>
     <color name="light_grey">#E7E7E7</color>
     <color name="light_green">#89C1B1</color>
 </resources>

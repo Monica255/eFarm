@@ -109,25 +109,6 @@
                 android:textAlignment="textStart"
                 tools:text="Para petani perlu menyadari pentingnya melestarikan sumber daya lahan pertanian karena sawah berperan sebagai pemasok bahan pokok nasional sebesar 90%..." />
 
-<!--            <RelativeLayout-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginStart="15dp"-->
-<!--                android:layout_marginTop="10dp"-->
-<!--                android:layout_marginBottom="5dp"-->
-<!--                android:background="@drawable/bg_kategori_selected">-->
-
-<!--                <TextView-->
-<!--                    android:id="@+id/tv_kategori_post_forum"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="16dp"-->
-<!--                    android:layout_marginStart="10dp"-->
-<!--                    android:layout_marginEnd="10dp"-->
-<!--                    android:textColor="@color/white"-->
-<!--                    android:textSize="11sp"-->
-<!--                    tools:text="Informasi" />-->
-<!--            </RelativeLayout>-->
-
             <ImageView
                 android:id="@+id/img_header_post"
                 android:layout_width="match_parent"
@@ -170,6 +151,7 @@
                     android:layout_weight="1" />
 
                 <TextView
+                    android:visibility="gone"
                     android:id="@+id/tv_komentar"
                     style="@style/SubTitleText"
                     android:layout_width="wrap_content"

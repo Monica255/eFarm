@@ -1,7 +1,6 @@
-package com.example.efarm.ui.forum
+package com.example.efarm.ui.forum.detail
 
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +13,7 @@ import com.example.eFarm.R
 import com.example.eFarm.databinding.ItemCommentForumBinding
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.util.TextFormater
+import com.example.efarm.ui.forum.ForumViewModel
 
 class PagingCommentAdapter(
     private val verifiedId: String?,

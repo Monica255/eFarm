@@ -100,7 +100,7 @@ class PagingForumAdapter(
                     }, 200)
             }
 
-            if (post.img_header != null) {
+            if (post.img_header != null&&post.img_header?.trim()!="") {
                 binding.imgHeaderPost.visibility = View.VISIBLE
                 Glide.with(itemView)
                     .load(post.img_header)
