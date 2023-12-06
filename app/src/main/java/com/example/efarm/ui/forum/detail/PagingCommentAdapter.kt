@@ -1,6 +1,7 @@
 package com.example.efarm.ui.forum.detail
 
 import android.os.Build
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import com.example.efarm.core.data.source.remote.model.CommentForumPost
 import com.example.efarm.core.util.TextFormater
 import com.example.efarm.ui.forum.ForumViewModel
 
+
 class PagingCommentAdapter(
     private val verifiedId: String?,
     private val viewModel: ForumViewModel,
@@ -27,7 +29,20 @@ class PagingCommentAdapter(
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(comment: CommentForumPost) {
             binding.tvTimestamp.text = TextFormater.toPostTime(comment.timestamp, binding.root.context)
-            binding.tvComment.text=comment.content
+
+            if (comment.content.length > 80) {
+                val sub: String = comment.content.substring(0, 80)
+                binding.tvComment.setText(Html.fromHtml("$sub<font color='#F39322'><b> ....</b></font>"))
+                binding.tvComment.setOnClickListener { view ->
+                    if (!binding.tvComment.text.equals(comment.content)) {
+                        binding.tvComment.setText(comment.content)
+                    } else {
+                        binding.tvComment.setText(Html.fromHtml("$sub<font color='#F39322'><b> ....</b></font>"))
+                    }
+                }
+            } else {
+                binding.tvComment.text=comment.content
+            }
             binding.tvBestAnswer.visibility=if(verifiedId==comment.id_comment)View.VISIBLE else View.GONE
             viewModel.getUserdata(comment.user_id).observe(activity) {it ->
                 it?.let {

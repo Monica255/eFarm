@@ -1,5 +1,6 @@
 package com.example.efarm.core.domain.repository
 
+import android.net.Uri
 import androidx.paging.PagingData
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
@@ -28,4 +29,6 @@ interface IForumRepository {
     suspend fun getBestComment(idComment:String):Flow<Resource<CommentForumPost>>
 
     suspend fun sendComment(comment:CommentForumPost):Flow<Resource<String>>
+
+    suspend fun uploadThread(data:ForumPost,file: Uri?):Flow<Resource<String>>
 }

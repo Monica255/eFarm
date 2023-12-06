@@ -87,6 +87,8 @@
                     android:orientation="vertical">
 
                     <ImageView
+                        android:visibility="gone"
+                        tools:visibility="visible"
                         android:id="@+id/img_header_post"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

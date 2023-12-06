@@ -64,12 +64,12 @@ class PagingForumAdapter(
 
             val doLike: ((Unit) -> Unit) = {
                 onCheckChanged.invoke(post)
-                if (post.likes != null && uid != null) {
+                if (uid != null) {
                     binding.cbLike.isChecked = !isLiked
+                    Log.d("animation","show animation "+isLiked)
                     if (!isLiked) {
-                        //post.likes?.add(uid)
-                        val show = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0.7f).setDuration(600)
-                        val disappear = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0f).setDuration(600)
+                        val show = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0.8f).setDuration(600)
+                        val disappear = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0f).setDuration(800)
                         AnimatorSet().apply {
                             playSequentially(show, disappear)
                             start()
@@ -97,7 +97,7 @@ class PagingForumAdapter(
                             doubleClick =0
                             return@postDelayed
                         }
-                    }, 200)
+                    }, 250)
             }
 
             if (post.img_header != null&&post.img_header?.trim()!="") {

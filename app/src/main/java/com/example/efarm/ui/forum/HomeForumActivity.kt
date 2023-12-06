@@ -1,15 +1,19 @@
 package com.example.efarm.ui.forum
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.eFarm.R
 import com.example.eFarm.databinding.ActivityHomeForumBinding
 import com.example.efarm.core.data.Resource
@@ -23,6 +27,7 @@ import com.example.efarm.ui.forum.upload.MakePostActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.io.File
 
 interface OnGetDataTopic {
     fun handleDataTopic(data: Topic?)
@@ -57,12 +62,20 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                         tempPost=null
                     }
                 }
-
                 else -> {}
             }
         }
     }
 
+    private val launcherMakePost = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {result ->
+        goToDetail=false
+        if (result.resultCode == RESULT_OK) {
+            viewModel.getData()
+        }
+    }
+    private var goToDetail=false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeForumBinding.inflate(layoutInflater)
@@ -91,32 +104,42 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
         viewModel.getData()
         viewModel.pagingData.observe(this) { it ->
+            binding.rvForumPost.smoothScrollToPosition(0)
             it.observe(this) {
                 if (it != null) {
                     adapterForum.submitData(lifecycle, it)
+                    binding.swipeRefresh.isRefreshing = false
                 }
             }
         }
 
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.getData()
+        }
+
         binding.fabAdd.setOnClickListener{
-            val intent = Intent(this, MakePostActivity::class.java)
-            startActivity(intent)
+            if(!goToDetail){
+                val intent = Intent(this, MakePostActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                launcherMakePost.launch(intent)
+            }
         }
 
         lifecycleScope.launch {
-            viewModel.getListTopik(KategoriTopik.COMMON).observe(this@HomeForumActivity) {
+            viewModel.getListTopik(KategoriTopik.SEMUA).observe(this@HomeForumActivity) {
                 when (it) {
-                    is Resource.Loading -> {
-                        Log.d("TAG","Loading common topics")
-
-                    }
+                    is Resource.Loading -> {}
                     is Resource.Success -> {
                         if(it.data==null||it.data.isEmpty()){
+                            Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
                             Log.d("TAG","common null")
                         }
 
                         it.data?.toMutableList()?.let { it1 ->
-                            viewModel.topicsCommon.value=it1
+                            val common=it1.filter { it.topic_category.trim()=="common topics"  }
+                            val commodity= it1.filter { it.topic_category.trim()=="commodity" }
+                            viewModel.topicsCommon.value = common.toMutableList()
+                            viewModel.topicsCommodity.value=commodity.toMutableList()
                         }
                     }
                     is Resource.Error -> {
@@ -125,26 +148,24 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                 }
             }
 
-            viewModel.getListTopik(KategoriTopik.COMMODITY).observe(this@HomeForumActivity) {
-                when (it) {
-                    is Resource.Loading -> {
-                        Log.d("TAG","Loading commodity")
-                    }
-                    is Resource.Success -> {
-                        if(it.data==null||it.data.isEmpty()){
-                            Log.d("TAG","commodity nul")
-
-//                            binding.tvLabelCommoditiesTopic.visibility=View.GONE
-                        }
-                        it.data?.toMutableList()?.let { it1 ->
-                            viewModel.topicsCommodity.value=it1
-                        }
-                    }
-                    is Resource.Error -> {
-                        Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
+//            viewModel.getListTopik(KategoriTopik.COMMODITY).observe(this@HomeForumActivity) {
+//                when (it) {
+//                    is Resource.Loading -> {
+//                        Log.d("TAG","Loading commodity")
+//                    }
+//                    is Resource.Success -> {
+//                        if(it.data==null||it.data.isEmpty()){
+//                            Log.d("TAG","commodity nul")
+//                        }
+//                        it.data?.toMutableList()?.let { it1 ->
+//                            viewModel.topicsCommodity.value=it1
+//                        }
+//                    }
+//                    is Resource.Error -> {
+//                        Toast.makeText(this@HomeForumActivity, "Failed to get topics",Toast.LENGTH_SHORT).show()
+//                    }
+//                }
+//            }
 
         }
 

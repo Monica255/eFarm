@@ -1,5 +1,6 @@
 package com.example.efarm.core.domain.usecase
 
+import android.net.Uri
 import androidx.paging.PagingData
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.model.CommentForumPost
@@ -26,5 +27,6 @@ class ForumInteractor @Inject constructor(
     override fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = repo.getComments(idForum,idBestComment)
     override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = repo.getBestComment(idComment)
     override suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> = repo.sendComment(comment)
+    override suspend fun uploadThread(data: ForumPost,file: Uri?): Flow<Resource<String>> = repo.uploadThread(data,file)
 
 }

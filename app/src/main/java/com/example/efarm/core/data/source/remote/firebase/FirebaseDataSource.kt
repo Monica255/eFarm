@@ -1,7 +1,9 @@
 package com.example.efarm.core.data.source.remote.firebase
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -13,6 +15,7 @@ import com.example.efarm.core.data.source.remote.model.ForumPost
 import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.data.source.remote.model.UserData
 import com.example.efarm.core.util.KategoriTopik
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -20,9 +23,11 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,11 +38,14 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 class FirebaseDataSource @Inject constructor(
     firebaseDatabase: FirebaseDatabase,
     private val firebaseAuth: FirebaseAuth,
+    private val firebaseStorage: FirebaseStorage,
     firebaseFirestore: FirebaseFirestore,
     @ApplicationContext private val context: Context
 ) {
@@ -45,6 +53,7 @@ class FirebaseDataSource @Inject constructor(
         get() {
             return firebaseAuth.currentUser
         }
+    private val storageUserRef = firebaseStorage.reference.child("thread_headers")
     private val userDataRef = firebaseDatabase.reference.child("user_data/")
     private val commentRef = firebaseFirestore.collection("forum_comments")
 
@@ -159,6 +168,7 @@ class FirebaseDataSource @Inject constructor(
         }
         return userData
     }
+
     fun signOut() {
         if (currentUser != null) {
             firebaseAuth.signOut()
@@ -169,11 +179,12 @@ class FirebaseDataSource @Inject constructor(
     fun getPagingForum(
         topic: Topic? = null
     ): Flow<PagingData<ForumPost>> {
-        var query:Query
-        if(topic!=null){
-            query = forumRef.orderBy("timestamp", Query.Direction.DESCENDING).whereArrayContains("topics",topic.topic_id)
+        var query: Query
+        if (topic != null) {
+            query = forumRef.orderBy("timestamp", Query.Direction.DESCENDING)
+                .whereArrayContains("topics", topic.topic_id)
                 .limit(4)
-        }else{
+        } else {
             query = forumRef.orderBy("timestamp", Query.Direction.DESCENDING)
                 .limit(4)
         }
@@ -189,14 +200,18 @@ class FirebaseDataSource @Inject constructor(
         return pager.flow
     }
 
-    fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> {
-        val query:Query=commentRef.orderBy("timestamp",Query.Direction.DESCENDING).whereEqualTo("id_forum_post",idForum).limit(3)
+    fun getComments(
+        idForum: String,
+        idBestComment: CommentForumPost?
+    ): Flow<PagingData<CommentForumPost>> {
+        val query: Query = commentRef.orderBy("timestamp", Query.Direction.DESCENDING)
+            .whereEqualTo("id_forum_post", idForum).limit(3)
         val pager = Pager(
             config = PagingConfig(
                 pageSize = 3
             ),
             pagingSourceFactory = {
-                CommentForumPagingStore(query,idBestComment)
+                CommentForumPagingStore(query, idBestComment)
             }
         )
         return pager.flow
@@ -225,65 +240,119 @@ class FirebaseDataSource @Inject constructor(
         }
     }
 
+//    suspend fun getListTopikForum(kategory: KategoriTopik): Flow<Resource<List<Topic>>> {
+//        var list = mutableListOf<Topic>()
+//        var msg: String? = null
+//        return flow {
+//            emit(Resource.Loading())
+//            val query = getQueryTopicByCategory(kategory)
+//            query.get().addOnCompleteListener {
+//                if (it.isSuccessful) {
+//                    try {
+//                        for (i in it.result) {
+//                            val x = i.toObject<Topic>()
+//                            list.add(x)
+//                        }
+//                    } catch (e: Exception) {
+//                        msg = e.message
+//                        list = mutableListOf()
+//                    }
+//                } else {
+//                    msg = "Error"
+//                    list = mutableListOf()
+//                }
+//            }.await()
+//
+//            if (msg != null) {
+//                emit(Resource.Error(msg!!))
+//            } else {
+//                emit(Resource.Success(list))
+//            }
+//        }
+//    }
+
     suspend fun getListTopikForum(kategory: KategoriTopik): Flow<Resource<List<Topic>>> {
-        var list = mutableListOf<Topic>()
-        var msg: String? = null
         return flow {
             emit(Resource.Loading())
             val query = getQueryTopicByCategory(kategory)
-            query.get().addOnCompleteListener {
-                if (it.isSuccessful) {
-                    try {
-                        for (i in it.result) {
-                            val x = i.toObject<Topic>()
-                            list.add(x)
-                        }
-                    } catch (e: Exception) {
-                        msg = e.message
-                        list = mutableListOf()
+
+            try {
+                val result = suspendCoroutine<Task<QuerySnapshot>> { continuation ->
+                    query.get().addOnCompleteListener { task ->
+                        continuation.resume(task)
                     }
+                }
+
+                if (result.isSuccessful) {
+                    val list =
+                        result.result?.documents?.mapNotNull { it.toObject<Topic>() } ?: emptyList()
+                    emit(Resource.Success(list))
                 } else {
-                    msg = "Error"
-                    list = mutableListOf()
+                    val errorMessage = result.exception?.message ?: "Error"
+                    emit(Resource.Error(errorMessage))
                 }
-            }.await()
-
-            if (msg != null) {
-                emit(Resource.Error(msg!!))
-            } else {
-                emit(Resource.Success(list))
+            } catch (e: Exception) {
+                emit(Resource.Error(e.message ?: "Unknown error"))
             }
         }
     }
 
-    suspend fun getTopics(topics:List<String>): Flow<Resource<List<Topic>>>{
-        var list= mutableListOf<Topic>()
-        var msg:String?=context.getString(R.string.gagal_mendapatkan_data)
-        return flow{
-            topicRef.whereIn("topic_id",topics).get().addOnCompleteListener {
-                if(it.isSuccessful){
-                    msg=null
-                    try{
-                        for(i in it.result){
-                            val x=i.toObject<Topic>()
-                            list.add(x)
-                        }
-                    }catch (e:Exception){
-                        Log.d("TAG","unsuccessful")
+
+//    suspend fun getTopics(topics:List<String>): Flow<Resource<List<Topic>>>{
+//        var list= mutableListOf<Topic>()
+//        var msg:String?=context.getString(R.string.gagal_mendapatkan_data)
+//        return flow{
+//            topicRef.whereIn("topic_id",topics).get().addOnCompleteListener {
+//                if(it.isSuccessful){
+//                    msg=null
+//                    try{
+//                        for(i in it.result){
+//                            val x=i.toObject<Topic>()
+//                            list.add(x)
+//                        }
+//                    }catch (e:Exception){
+//                        Log.d("TAG","unsuccessful")
+//                    }
+//                }
+//            }.await()
+//            if (msg != null) {
+//                emit(Resource.Error(msg!!))
+//            } else {
+//                emit(Resource.Success(list))
+//            }
+//        }
+//    }
+
+    suspend fun getTopics(topics: List<String>): Flow<Resource<List<Topic>>> {
+        return flow {
+            val list = mutableListOf<Topic>()
+            try {
+                emit(Resource.Loading())
+                val result = suspendCoroutine<Task<QuerySnapshot>> { continuation ->
+                    topicRef.whereIn("topic_id", topics).get().addOnCompleteListener { task ->
+                        continuation.resume(task)
                     }
                 }
-            }.await()
-            if (msg != null) {
-                emit(Resource.Error(msg!!))
-            } else {
-                emit(Resource.Success(list))
+                if (result.isSuccessful) {
+                    for (i in result.result) {
+                        val x = i.toObject<Topic>()
+                        list.add(x)
+                    }
+                    emit(Resource.Success(list))
+                } else {
+                    emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.message.toString()))
             }
         }
     }
+
 
     private fun isContainUid(list: MutableList<String>): Boolean {
         return list.contains(currentUser?.uid)
     }
+
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
             emit(Resource.Loading())
@@ -318,83 +387,242 @@ class FirebaseDataSource @Inject constructor(
         }
     }
 
-    fun getDetailForum(idForum:String): Flow<Resource<ForumPost>> {
-        var x:ForumPost?=null
-        var msg = context.getString(R.string.gagal_mendapatkan_data)
-        return  flow{
+//    fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
+//        var x: ForumPost? = null
+//        var msg = context.getString(R.string.gagal_mendapatkan_data)
+//        return flow {
+//            emit(Resource.Loading())
+//            forumRef.document(idForum).get().addOnCompleteListener {
+//                if (it.isSuccessful) {
+//                    try {
+//                        x = it.result.toObject<ForumPost>()
+//                    } catch (e: Exception) {
+//                        msg = e.message.toString()
+//                    }
+//                } else {
+//                    Log.d("TAG", "unsuccessful")
+//                }
+//            }.await()
+//            if (x != null) {
+//                emit(Resource.Success(x!!))
+//            } else {
+//                emit(Resource.Error(msg))
+//            }
+//        }
+//    }
+
+    fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
+        return flow {
             emit(Resource.Loading())
-            forumRef.document(idForum).get().addOnCompleteListener {
-                if(it.isSuccessful){
-                    try {
-                        x = it.result.toObject<ForumPost>()
-                    } catch (e: Exception) {
-                        msg = e.message.toString()                   }
-                }else{
-                    Log.d("TAG","unsuccessful")
+            var x: ForumPost? = null
+            try {
+                val result = suspendCoroutine<Task<DocumentSnapshot>> { continuation ->
+                    forumRef.document(idForum).get().addOnCompleteListener { task ->
+                        continuation.resume(task)
+                    }
                 }
-            }.await()
-            if (x != null) {
-                emit(Resource.Success(x!!))
-            } else {
-                emit(Resource.Error(msg))
-            }
-        }
-    }
-
-    suspend fun getBestComment(idComment:String):Flow<Resource<CommentForumPost>>{
-
-        var x:CommentForumPost?=null
-        var msg = context.getString(R.string.gagal_mendapatkan_data)
-        return  flow{
-            emit(Resource.Loading())
-            commentRef.document(idComment).get().addOnCompleteListener {
-                if(it.isSuccessful){
-                    try {
-                        x = it.result.toObject<CommentForumPost>()
-                    } catch (e: Exception) {
-                        msg = e.message.toString()                   }
-                }else{
-                    msg="Unsuccesful"
-                    Log.d("TAG","unsuccessful")
-                }
-            }.await()
-            if (x != null) {
-                emit(Resource.Success(x!!))
-            } else {
-                emit(Resource.Error(msg))
-            }
-        }
-    }
-
-    suspend fun sendComment(comment:CommentForumPost):Flow<Resource<String>>{
-        val key=commentRef.document().id
-        var msg :String?= null
-        comment.id_comment=key
-        return flow{
-            emit(Resource.Loading())
-            val x=FieldValue.arrayUnion(key)
-            Log.d("TAG",x.toString())
-            forumRef.document(comment.id_forum_post).update("comments",FieldValue.arrayUnion(key)).addOnCompleteListener {
-                if(it.isSuccessful){
-                    commentRef.document(key).set(comment).addOnCompleteListener {
-                        try {
-                            if (!it.isSuccessful) {
-                                val exception = it.exception
-                                msg=exception.toString()
-                            }
-                        }catch (e:Exception){
-                            msg=e.message
-                        }
+                if(result.isSuccessful){
+                    x = result.result?.toObject<ForumPost>()
+                    if(x!=null){
+                        emit(Resource.Success(x))
+                    }else{
+                        emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
                     }
                 }else{
-                    msg="Error adding new comment"
+                    emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
                 }
-            }.await()
+            } catch (e: Exception) {
+                emit(Resource.Error(e.message.toString()))
+            }
+        }
+    }
 
-            if(msg!=null){
-                emit(Resource.Error(msg!!))
-            }else{
-                emit(Resource.Success("Comment added successfully"))
+
+    suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> {
+        return flow {
+            var x: CommentForumPost? = null
+            emit(Resource.Loading())
+            try {
+                val result = suspendCoroutine<Task<DocumentSnapshot>> { continuation ->
+                    commentRef.document(idComment).get().addOnCompleteListener { task ->
+                        continuation.resume(task)
+                    }
+                }
+                if(result.isSuccessful){
+                    x = result.result?.toObject<CommentForumPost>()
+                    if(x!=null){
+                        emit(Resource.Success(x))
+                    }else{
+                        emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                    }
+                }else{
+                    emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                }
+            }catch (e:Exception){
+                emit(Resource.Error(e.message.toString()))
+            }
+        }
+    }
+
+//    suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> {
+//        val key = commentRef.document().id
+//        var msg: String? = null
+//        comment.id_comment = key
+//        return flow {
+//            emit(Resource.Loading())
+//            val x = FieldValue.arrayUnion(key)
+//            forumRef.document(comment.id_forum_post).update("comments", FieldValue.arrayUnion(key))
+//                .addOnCompleteListener {
+//                    if (it.isSuccessful) {
+//                        commentRef.document(key).set(comment).addOnCompleteListener {
+//                            try {
+//                                if (!it.isSuccessful) {
+//                                    val exception = it.exception
+//                                    msg = exception.toString()
+//                                }
+//                            } catch (e: Exception) {
+//                                msg = e.message
+//                            }
+//                        }
+//                    } else {
+//                        msg = "Error adding new comment"
+//                    }
+//                }.await()
+//
+//            if (msg != null) {
+//                emit(Resource.Error(msg!!))
+//            } else {
+//                emit(Resource.Success("Comment added successfully"))
+//            }
+//        }
+//    }
+
+    suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> {
+        val key = commentRef.document().id
+        var msg: String? = null
+        comment.id_comment = key
+        return flow {
+            emit(Resource.Loading())
+            try {
+                val updateResult = suspendCoroutine<Task<Void>> { continuation ->
+                    val x = FieldValue.arrayUnion(key)
+                    forumRef.document(comment.id_forum_post).update("comments", x)
+                        .addOnCompleteListener { task ->
+                            continuation.resume(task)
+                        }
+                }
+                if (updateResult.isSuccessful) {
+                    val commentResult = suspendCoroutine<Task<Void>> { continuation ->
+                        commentRef.document(key).set(comment)
+                            .addOnCompleteListener { task ->
+                                continuation.resume(task)
+                            }
+                    }
+                    if (commentResult.isSuccessful) {
+                        emit(Resource.Success("Comment added successfully"))
+                    }
+                } else {
+                    emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.message.toString()))
+            }
+        }
+    }
+
+
+//    suspend fun uploadThread(data: ForumPost, file: Uri?): Flow<Resource<String>> {
+//        val key = forumRef.document().id
+//        var msg: String? = null
+//        data.id_forum_post = key
+//        return flow {
+//            emit(Resource.Loading())
+//            if (file != null) {
+//                val r = storageUserRef.child(key).putFile(file).await()
+//                if (r !== null) {
+//                    if (r.task.isSuccessful) {
+//                        storageUserRef.child(key).downloadUrl.addOnCompleteListener { uri ->
+//                            data.img_header = uri.result.toString()
+//                            forumRef.document(key).set(data).addOnCompleteListener {
+//                                try {
+//                                    if (!it.isSuccessful) {
+//                                        val exception = it.exception
+//                                        msg = exception.toString()
+//                                    }
+//                                } catch (e: Exception) {
+//                                    msg = e.message
+//                                }
+//                            }
+//                        }
+//                    } else {
+//                        msg = "Failed to upload image"
+//                    }
+//                } else {
+//                    msg = "Failed to upload image"
+//                }
+//            } else {
+//                forumRef.document(key).set(data).addOnCompleteListener {
+//                    try {
+//                        if (!it.isSuccessful) {
+//                            val exception = it.exception
+//                            msg = exception.toString()
+//                        }
+//                    } catch (e: Exception) {
+//                        msg = e.message
+//                    }
+//                }
+//            }
+//
+//            if (msg != null) {
+//                emit(Resource.Error(msg!!))
+//            } else {
+//                emit(Resource.Success("Thread uploaded successfully"))
+//            }
+//        }
+//    }
+
+    suspend fun uploadThread(data: ForumPost, file: Uri?): Flow<Resource<String>> {
+        val key = forumRef.document().id
+        data.id_forum_post = key
+        return flow {
+            emit(Resource.Loading())
+
+            if (file != null) {
+                try {
+                    val r = storageUserRef.child(key).putFile(file).await()
+
+                    if (r != null && r.task.isSuccessful) {
+                        val uri = storageUserRef.child(key).downloadUrl.await()
+
+                        if (uri != null) {
+                            data.img_header = uri.toString()
+                            val setResult = suspendCoroutine<Task<Void>> { continuation ->
+                                forumRef.document(key).set(data).addOnCompleteListener { task ->
+                                    continuation.resume(task)
+                                }
+                            }
+                            if (setResult.isSuccessful) {
+                                emit(Resource.Success("Comment added successfully"))
+                            }
+                        } else {
+                            emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                        }
+                    } else {
+                        emit(Resource.Error(context.getString(R.string.gagal_mendapatkan_data)))
+                    }
+                } catch (e: Exception) {
+                    emit(Resource.Error(e.message.toString()))
+                }
+            } else {
+                val setResult = suspendCoroutine<Task<Void>> { continuation ->
+                    forumRef.document(key).set(data).addOnCompleteListener { task ->
+                        continuation.resume(task)
+                    }
+                }
+
+                if (setResult.isSuccessful) {
+                    emit(Resource.Success("Comment added successfully"))
+                }
             }
         }
     }

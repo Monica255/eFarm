@@ -99,10 +99,16 @@ class DetailForumPostActivity : AppCompatActivity() {
         binding.tvLikeCount.text = TextFormater.formatLikeCounts(data.like_count)
 
 
-        Glide.with(this)
-            .load(data.img_header)
-            .placeholder(R.drawable.placeholder)
-            .into(binding.imgHeaderPost)
+        if(data.img_header==null||data.img_header==""){
+            binding.imgHeaderPost.visibility=View.GONE
+        }else{
+            Glide.with(this)
+                .load(data.img_header)
+                .placeholder(R.drawable.placeholder)
+                .into(binding.imgHeaderPost)
+            binding.imgHeaderPost.visibility=View.VISIBLE
+        }
+
 
         binding.tvTimastamp.text = TextFormater.toPostTime(data.timestamp, this)
 
@@ -190,31 +196,30 @@ class DetailForumPostActivity : AppCompatActivity() {
 
     private fun getComments(data: ForumPost) {
         lifecycleScope.launch {
-            data.comments?.let { list ->
-                if (!list.isEmpty()) {
-                    data.verified?.let { it1 ->
-                        viewModel.getBestComment(it1).observe(this@DetailForumPostActivity) {
-                            when (it) {
-                                is Resource.Loading -> {
-                                    showLoading(true)
-                                }
+            if(data.verified!=null && data.verified!="content") {
+                viewModel.getBestComment(data.verified!!).observe(this@DetailForumPostActivity) {
+                    when (it) {
+                        is Resource.Loading -> {
+                            showLoading(true)
+                        }
 
-                                is Resource.Error -> {
-                                    showLoading(false)
-                                    it.message?.let {
-                                        Log.d("TAG", "error bc " + it)
-                                    }
-                                }
-
-                                is Resource.Success -> {
-                                    bestComment=it.data
-                                    showLoading(false)
-                                    getComments(data.id_forum_post, bestComment)
-                                }
+                        is Resource.Error -> {
+                            showLoading(false)
+                            it.message?.let {
+//                                Log.d("CMT", "error bc " + it)
                             }
+                        }
+
+                        is Resource.Success -> {
+                            bestComment=it.data
+                            showLoading(false)
+                            getComments(data.id_forum_post, bestComment)
                         }
                     }
                 }
+            }else{
+                getComments(data.id_forum_post, null)
+
             }
         }
 
@@ -222,7 +227,6 @@ class DetailForumPostActivity : AppCompatActivity() {
 
     private fun getComments(idForum:String, bestCommnet: CommentForumPost?) {
         viewModel.getComments(idForum, bestCommnet).observe(this) {
-            Log.d("CMT",bestCommnet.toString())
             adapterComment.submitData(lifecycle, it)
         }
     }

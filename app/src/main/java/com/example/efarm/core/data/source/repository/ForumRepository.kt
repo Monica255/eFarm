@@ -1,5 +1,6 @@
 package com.example.efarm.core.data.source.repository
 
+import android.net.Uri
 import androidx.paging.PagingData
 import com.example.efarm.core.data.Resource
 import com.example.efarm.core.data.source.remote.firebase.FirebaseDataSource
@@ -24,4 +25,5 @@ class ForumRepository @Inject constructor(
     override fun getComments(idForum:String,idBestComment:CommentForumPost?): Flow<PagingData<CommentForumPost>> = firebaseDataSource.getComments(idForum,idBestComment)
     override suspend fun getBestComment(idComment: String): Flow<Resource<CommentForumPost>> = firebaseDataSource.getBestComment(idComment)
     override suspend fun sendComment(comment: CommentForumPost): Flow<Resource<String>> = firebaseDataSource.sendComment(comment)
+    override suspend fun uploadThread(data: ForumPost,file: Uri?): Flow<Resource<String>> = firebaseDataSource.uploadThread(data,file)
 }

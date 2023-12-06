@@ -41,7 +41,6 @@ class ForumViewModel @Inject constructor(
 
     fun getData(topic: Topic? = mTopics) {
         Log.d("TAG",topic?.topic_name?: "null")
-//        if (mKategoriForum != kategoriForum) mKategoriForum = kategoriForum
         if (mTopics != topic) mTopics = topic
         modificationEventsForumPost=MutableStateFlow(emptyList())
         pagingData.value = forumUseCase.getPagingForum(mTopics)
