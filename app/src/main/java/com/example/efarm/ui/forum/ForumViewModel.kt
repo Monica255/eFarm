@@ -30,6 +30,8 @@ class ForumViewModel @Inject constructor(
     var mTopics: Topic? = null
     val currentUser = forumUseCase.currentUser
 
+    fun signOut(){authUseCase.signOut()}
+
     fun getUserdata(uid: String?) = authUseCase.getUserData(uid)
 
     fun likeForumPost(forumPost: ForumPost) = forumUseCase.likeForumPost(forumPost).asLiveData()
@@ -40,7 +42,6 @@ class ForumViewModel @Inject constructor(
     val pagingData = MutableLiveData<LiveData<PagingData<ForumPost>>>()
 
     fun getData(topic: Topic? = mTopics) {
-        Log.d("TAG",topic?.topic_name?: "null")
         if (mTopics != topic) mTopics = topic
         modificationEventsForumPost=MutableStateFlow(emptyList())
         pagingData.value = forumUseCase.getPagingForum(mTopics)
@@ -79,13 +80,14 @@ class ForumViewModel @Inject constructor(
                     .filter { ViewEvents.entity.id_forum_post != it.id_forum_post }
             }
             is ViewEventsForumPost.Edit -> {
-                //Log.d("TAG", "ve " + ViewEvents.isLiked.toString())
+                Log.d("like",ViewEvents.entity.likes.toString())
                 paging
                     .map {
                         if (ViewEvents.entity.id_forum_post == it.id_forum_post) return@map it.copy(
-                            like_count = if (ViewEvents.isLiked) it.like_count + 1 else it.like_count - 1,
+//                            like_count = if (ViewEvents.isLiked) it.like_count + 1 else it.like_count - 1,
                             likes = if (currentUser != null) {
                                 var list = mutableListOf<String>()
+                                it.likes?.let { it1 -> list.addAll(it1) }
                                 if(ViewEvents.isLiked){
                                     list.add(currentUser.uid)
                                 }else list.remove(currentUser.uid)

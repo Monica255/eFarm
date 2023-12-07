@@ -26,6 +26,16 @@
                 android:layout_gravity="center"
                 android:text="@string/forum"
                 android:textSize="20sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_marginStart="4dp"
+                android:layout_gravity="end"
+                android:layout_marginEnd="@dimen/margin_start_end"
+                android:button="@android:color/transparent"
+                android:id="@+id/btn_logout"
+                android:background="@drawable/selector_logout"
+                android:layout_width="25dp"
+                android:layout_height="25dp"/>
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>

@@ -285,9 +285,8 @@ class MakePostActivity : AppCompatActivity(), OnGetDataTopics, OnGetDataThread {
                         viewModel.tempThread,
                         null,
                         DateConverter.getCurrentTimestamp(),
-                        0,
-                        null,
-                        null,
+                        mutableListOf<String>(),
+                        mutableListOf<String>(),
                         viewModel.topics.value!!.map { t ->t.topic_id }
                     )
                 }

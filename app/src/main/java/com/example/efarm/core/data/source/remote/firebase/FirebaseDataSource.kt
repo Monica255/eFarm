@@ -35,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -353,9 +354,46 @@ class FirebaseDataSource @Inject constructor(
         return list.contains(currentUser?.uid)
     }
 
+//    fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
+//        return flow {
+//            emit(Resource.Loading())
+//            val favorite: Boolean
+//            val list = forumPost.likes ?: mutableListOf()
+//            val s: FieldValue = if (isContainUid(list)) {
+//                favorite = false
+//                FieldValue.arrayRemove(currentUser?.uid)
+//            } else {
+//                favorite = true
+//                FieldValue.arrayUnion(currentUser?.uid)
+//            }
+//            var successMsg: Pair<Boolean, String?>? = null
+//            var errorMsg = ""
+//            forumRef.document(forumPost.id_forum_post).update("likes", s)
+//                .addOnCompleteListener {
+//                    if (it.isSuccessful) {
+//                        Log.d("like","like successful")
+//                        forumRef.document(forumPost.id_forum_post)
+//                            .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
+//                        successMsg = Pair(
+//                            favorite,
+//                            currentUser?.uid
+//                        )
+//                    } else {
+//                        errorMsg =
+//                            if (favorite) "Gagal menyukai postingan" else "Gagal menghapus suka paka postingan"
+//                    }
+//                }.await()
+//            if (successMsg != null) {
+//                emit(Resource.Success(successMsg!!))
+//            } else emit(Resource.Error(errorMsg))
+//        }
+//    }
+
+
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
             emit(Resource.Loading())
+
             val favorite: Boolean
             val list = forumPost.likes ?: mutableListOf()
             val s: FieldValue = if (isContainUid(list)) {
@@ -365,27 +403,35 @@ class FirebaseDataSource @Inject constructor(
                 favorite = true
                 FieldValue.arrayUnion(currentUser?.uid)
             }
-            var successMsg: Pair<Boolean, String?>? = null
-            var errorMsg = ""
-            forumRef.document(forumPost.id_forum_post).update("likes", s)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        forumRef.document(forumPost.id_forum_post)
-                            .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
-                        successMsg = Pair(
-                            favorite,
-                            currentUser?.uid
-                        )
-                    } else {
-                        errorMsg =
-                            if (favorite) "Gagal menyukai postingan" else "Gagal menghapus suka paka postingan"
-                    }
-                }.await()
-            if (successMsg != null) {
-                emit(Resource.Success(successMsg!!))
-            } else emit(Resource.Error(errorMsg))
+
+            try {
+                val result = suspendCancellableCoroutine<Boolean> { continuation ->
+                    forumRef.document(forumPost.id_forum_post).update("likes", s)
+                        .addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                Log.d("like","like successful")
+//                                forumRef.document(forumPost.id_forum_post)
+//                                    .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
+                                continuation.resume(true)
+                            } else {
+                                continuation.resume(false)
+                            }
+                        }
+                }
+
+                val successMsg = Pair(
+                    favorite,
+                    currentUser?.uid
+                )
+
+                emit(Resource.Success(successMsg))
+            } catch (e: Exception) {
+                val errorMsg = if (favorite) "Gagal menyukai postingan" else "Gagal menghapus suka paka postingan"
+                emit(Resource.Error(errorMsg))
+            }
         }
     }
+
 
 //    fun getDetailForum(idForum: String): Flow<Resource<ForumPost>> {
 //        var x: ForumPost? = null

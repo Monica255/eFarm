@@ -8,7 +8,6 @@ data class ForumPost(
     var content:String="",
     var img_header:String?=null,
     var timestamp: Long=0,
-    var like_count:Int=0,
     var likes:MutableList<String>?= null,
     var comments:MutableList<String>?=null,
     var topics:List<String>?=null,

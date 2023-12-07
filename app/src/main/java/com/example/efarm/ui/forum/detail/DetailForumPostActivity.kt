@@ -96,7 +96,7 @@ class DetailForumPostActivity : AppCompatActivity() {
             binding.cbLike.isChecked = false
         }
 
-        binding.tvLikeCount.text = TextFormater.formatLikeCounts(data.like_count)
+//        binding.tvLikeCount.text = TextFormater.formatLikeCounts(data.likes?.size?:0)
 
 
         if(data.img_header==null||data.img_header==""){
@@ -190,7 +190,6 @@ class DetailForumPostActivity : AppCompatActivity() {
                     }
                 }
             }
-
         }
     }
 

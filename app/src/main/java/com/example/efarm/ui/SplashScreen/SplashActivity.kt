@@ -37,7 +37,6 @@ class SplashActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.d("TAG", e.message.toString())
             }
-
         }, DELAY_TIME)
     }
 

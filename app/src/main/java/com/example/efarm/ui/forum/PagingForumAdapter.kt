@@ -34,9 +34,10 @@ class PagingForumAdapter(
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun bind(post: ForumPost) {
+            Log.d("like", "adp "+post.likes.toString())
             binding.tvPostTitle.text = post.title
             binding.tvPostContent.text = post.content
-            binding.tvLikeCount.text = TextFormater.formatLikeCounts(post.like_count)
+            binding.tvLikeCount.text = TextFormater.formatLikeCounts(post.likes?.size?:0)
             binding.tvTimestamp.text = TextFormater.toPostTime(post.timestamp, binding.root.context)
             binding.tvKomentar.text =
                 binding.root.context.getString(R.string.komentar, post.comments?.size ?: 0)
@@ -65,8 +66,8 @@ class PagingForumAdapter(
             val doLike: ((Unit) -> Unit) = {
                 onCheckChanged.invoke(post)
                 if (uid != null) {
+                    Log.d("like","a")
                     binding.cbLike.isChecked = !isLiked
-                    Log.d("animation","show animation "+isLiked)
                     if (!isLiked) {
                         val show = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0.8f).setDuration(600)
                         val disappear = ObjectAnimator.ofFloat(binding.imgLike, View.ALPHA, 0f).setDuration(800)
@@ -78,6 +79,7 @@ class PagingForumAdapter(
                         //post.likes?.remove(uid)
                     }
                 } else {
+                    Log.d("like","b")
                     binding.cbLike.isChecked = false
                 }
             }

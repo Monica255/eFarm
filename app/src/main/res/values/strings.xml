@@ -33,4 +33,8 @@
     <string name="select_photo">Pilih foto</string>
     <string name="tulis_thread">Tulis thread</string>
     <string name="delete_image">Hapus gambar</string>
+    <string name="keluar">Keluar</string>
+    <string name="yakin_ingin_keluar">Yakin ingin keluar?</string>
+    <string name="tidak">Tidak</string>
+    <string name="ya">Ya</string>
 </resources>

@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +25,7 @@ import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.ViewEventsForumPost
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
 import com.example.efarm.ui.forum.upload.MakePostActivity
+import com.example.efarm.ui.loginsignup.LoginSignupActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -48,10 +50,12 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
 
     private val onCheckChanged: ((ForumPost) -> Unit) = { post ->
         tempPost=post
+        Log.d("like","occ "+post.likes.toString())
         viewModel.likeForumPost(post).observe(this){
             when(it){
                 is Resource.Success->{
                     it.data?.let {
+                        Log.d("like", it.first.toString())
                         if(tempPost!=null)viewModel.onViewEvent(ViewEventsForumPost.Edit(tempPost!!,it.first));tempPost=null
                     }
                 }
@@ -113,6 +117,10 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
             }
         }
 
+        binding.btnLogout.setOnClickListener{
+            showConfirmDialog()
+        }
+
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.getData()
         }
@@ -170,6 +178,28 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
         }
 
     }
+
+    private fun showConfirmDialog() {
+        val builder = AlertDialog.Builder(this)
+        val mConfirmDialog = builder.create()
+        builder.setTitle(getString(R.string.keluar))
+        builder.setMessage(getString(R.string.yakin_ingin_keluar))
+        builder.create()
+
+        builder.setPositiveButton(getString(R.string.ya)) { _, _ ->
+            viewModel.signOut()
+            val intent = Intent(this, LoginSignupActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            showLoading(false)
+        }
+
+        builder.setNegativeButton(getString(R.string.tidak)) { _, _ ->
+            mConfirmDialog.cancel()
+        }
+        builder.show()
+    }
+
 
     private fun showLoading(isShowLoading: Boolean) {
         binding.pbLoading.visibility = if (isShowLoading) View.VISIBLE else View.GONE
