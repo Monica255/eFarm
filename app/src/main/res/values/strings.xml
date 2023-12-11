@@ -37,4 +37,6 @@
     <string name="yakin_ingin_keluar">Yakin ingin keluar?</string>
     <string name="tidak">Tidak</string>
     <string name="ya">Ya</string>
+    <string name="ketik_sesuatu">Ketik sesuatu</string>
+    <string name="chat_bot">Chat bot</string>
 </resources>

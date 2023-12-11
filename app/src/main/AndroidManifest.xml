@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-feature android:name="android.hardware.camera" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:name="com.example.efarm.MyApplication"
         android:allowBackup="true"
@@ -18,13 +20,18 @@
         android:theme="@style/Theme.EFarm"
         tools:targetApi="31">
         <activity
+            android:name="com.example.efarm.ui.forum.chatbot.BubbleChatView"
+            android:exported="false" />
+        <activity
+            android:name="com.example.efarm.ui.forum.chatbot.ChatActivity"
+            android:exported="false" />
+        <activity
             android:name="com.example.efarm.ui.forum.upload.MakePostActivity"
             android:exported="false" />
         <activity
             android:name="com.example.efarm.ui.forum.detail.DetailForumPostActivity"
             android:exported="false"
-            android:launchMode="singleTop"
-            />
+            android:launchMode="singleTop" />
         <activity
             android:name="com.example.efarm.ui.forum.HomeForumActivity"
             android:exported="false" />
@@ -40,6 +47,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.efarm"

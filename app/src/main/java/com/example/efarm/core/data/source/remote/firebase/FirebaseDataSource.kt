@@ -392,7 +392,7 @@ class FirebaseDataSource @Inject constructor(
 
     fun likeForumPost(forumPost: ForumPost): Flow<Resource<Pair<Boolean, String?>>> {
         return flow {
-            emit(Resource.Loading())
+//            emit(Resource.Loading())
 
             val favorite: Boolean
             val list = forumPost.likes ?: mutableListOf()
@@ -414,6 +414,7 @@ class FirebaseDataSource @Inject constructor(
 //                                    .update("like_count", FieldValue.increment(if (favorite) 1 else -1))
                                 continuation.resume(true)
                             } else {
+                                Log.d("like","like failed")
                                 continuation.resume(false)
                             }
                         }

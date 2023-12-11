@@ -58,8 +58,8 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_close"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:alpha="0.7"
                 android:background="@drawable/close_icon"
                 android:backgroundTint="@color/green"
@@ -87,6 +87,8 @@
                     android:orientation="vertical">
 
                     <ImageView
+                        android:background="@drawable/placeholder"
+                        android:maxHeight="400dp"
                         android:visibility="gone"
                         tools:visibility="visible"
                         android:id="@+id/img_header_post"

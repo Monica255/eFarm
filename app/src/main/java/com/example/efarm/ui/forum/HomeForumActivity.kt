@@ -23,6 +23,7 @@ import com.example.efarm.core.data.source.remote.model.Topic
 import com.example.efarm.core.util.FORUM_POST_ID
 import com.example.efarm.core.util.KategoriTopik
 import com.example.efarm.core.util.ViewEventsForumPost
+import com.example.efarm.ui.forum.chatbot.ChatActivity
 import com.example.efarm.ui.forum.detail.DetailForumPostActivity
 import com.example.efarm.ui.forum.upload.MakePostActivity
 import com.example.efarm.ui.loginsignup.LoginSignupActivity
@@ -60,13 +61,16 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                     }
                 }
                 is Resource.Error->{
+                    Log.d("like", it.message.toString())
                     Toast.makeText(binding.root.context, it.message.toString(),Toast.LENGTH_SHORT).show()
                     tempPost?.let { it ->
                         viewModel.onViewEvent(ViewEventsForumPost.Rebind(it))
                         tempPost=null
                     }
                 }
-                else -> {}
+                else -> {
+                    Log.d("like", "else")
+                }
             }
         }
     }
@@ -131,6 +135,12 @@ class HomeForumActivity : AppCompatActivity(),OnGetDataTopic {
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 launcherMakePost.launch(intent)
             }
+        }
+
+        binding.fabChatbot.setOnClickListener{
+            val intent = Intent(this, ChatActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
         }
 
         lifecycleScope.launch {

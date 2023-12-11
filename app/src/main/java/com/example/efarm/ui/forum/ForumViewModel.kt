@@ -80,7 +80,7 @@ class ForumViewModel @Inject constructor(
                     .filter { ViewEvents.entity.id_forum_post != it.id_forum_post }
             }
             is ViewEventsForumPost.Edit -> {
-                Log.d("like",ViewEvents.entity.likes.toString())
+//                Log.d("like",ViewEvents.entity.likes.toString())
                 paging
                     .map {
                         if (ViewEvents.entity.id_forum_post == it.id_forum_post) return@map it.copy(

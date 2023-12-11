@@ -46,7 +46,7 @@ class SignupFragment : Fragment() {
                 name.isEmpty()
             }
         nameStream.subscribe {
-//            showEmailExistAlert(it)
+
         }
 
         val teleponStream = RxTextView.textChanges(binding.etDaftarTelepon)
@@ -55,7 +55,7 @@ class SignupFragment : Fragment() {
                 telp.length < 9 || telp.isEmpty()
             }
         teleponStream.subscribe {
-//            showEmailExistAlert(it)
+
         }
 
         val emailStream = RxTextView.textChanges(binding.etDaftarEmail)
@@ -64,7 +64,7 @@ class SignupFragment : Fragment() {
                 !Patterns.EMAIL_ADDRESS.matcher(email).matches()
             }
         emailStream.subscribe {
-//            showEmailExistAlert(it)
+
         }
 
         val passwordStream = RxTextView.textChanges(binding.etDaftarPassword)
@@ -73,7 +73,7 @@ class SignupFragment : Fragment() {
                 password.length < 6
             }
         passwordStream.subscribe {
-//            showPasswordMinimalAlert(it)
+
         }
         val passwordConfirmationStream = io.reactivex.Observable.merge(
             RxTextView.textChanges(binding.etDaftarPassword)
@@ -89,7 +89,7 @@ class SignupFragment : Fragment() {
             showPasswordConfirmationAlert(it)
         }
 
-        val invalidFieldsStream = io.reactivex.Observable.combineLatest(
+        val validFieldsStream = io.reactivex.Observable.combineLatest(
             nameStream,
             teleponStream,
             emailStream,
@@ -100,7 +100,7 @@ class SignupFragment : Fragment() {
             }
         )
 
-        invalidFieldsStream.subscribe { isValid ->
+        validFieldsStream.subscribe { isValid ->
             isDataValid = isValid
             if(isValid){
                 nama=binding.etDaftarNama.text.toString().trim()
